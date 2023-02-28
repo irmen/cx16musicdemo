@@ -1,5 +1,7 @@
 import time
 
+FRAME_RATE = 25e6/(525*800)      # vga doesn't run exactly at 1/60 seconds!
+
 
 class Trigger:
     text = []
@@ -47,7 +49,7 @@ def generate_code(triggers: list[Trigger]) -> None:
     print("    const ubyte LINECOUNT =", len(triggers))
     print("    uword[] timestamps = [     ; in jiffies")
     for trigger in triggers:
-        jiffies = int(trigger.timestamp * 60)
+        jiffies = int(trigger.timestamp * FRAME_RATE)
         print(f"        {jiffies},")
     print(f"        $ffff  ; end")
     print("    ]")
@@ -68,9 +70,9 @@ def playback(triggers: list[Trigger]) -> None:
         if trigger.timestamp == 0.0:
             print("zero timestamp, unfinished sync?")
             raise SystemExit(1)
-        print("(next at", trigger.timestamp, ")")
-        print()
-        timestamp_ns = int(trigger.timestamp * 1e9)
+        timestamp_jiffies = int(trigger.timestamp * FRAME_RATE)
+        print("(next at", trigger.timestamp, " jiffies=", timestamp_jiffies,")\n")
+        timestamp_ns = int(timestamp_jiffies/FRAME_RATE * 1e9)
         while time.monotonic_ns() - start_ns < timestamp_ns:
             pass
         for index, text in enumerate(trigger.text):
@@ -81,5 +83,5 @@ def playback(triggers: list[Trigger]) -> None:
 
 if __name__ == "__main__":
     triggers = load_source()
-    # generate_code(triggers)
-    playback(triggers)
+    generate_code(triggers)
+    # playback(triggers)

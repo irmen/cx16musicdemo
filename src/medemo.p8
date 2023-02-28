@@ -9,19 +9,15 @@
 main {
 
     sub start() {
-        txt.print_uw(lyrics.LINECOUNT)
-        txt.print_uw(lyrics.timestamps)
-        txt.print_uw(lyrics.lines)
-
-;        screen.prepare_title()
-;        screen.fade_in(16)
-;        sys.wait(180)
-;        screen.fade_out(16)
+        cx16.set_irq(&interrupts.handler, false)
+        screen.prepare_title()
+        screen.fade_in(16)
+        repeat 180 screen.waitvsync()
+        screen.fade_out(16)
 
         screen.prepare_demo()
         screen.fade_in(0)
         play_song()
-        sys.wait(180)
         screen.fade_out(0)
 
         screen.thanks()
@@ -31,8 +27,11 @@ main {
     }
 
     sub play_song() {
-        c64.SETTIM(0,0,0)
         ubyte line_idx
+
+        txt.plot(10,10)
+        txt.print("****** start *******")
+        interrupts.vsync_counter=0
 
         repeat {
             uword timestamp = lyrics.timestamps[line_idx]
@@ -40,9 +39,9 @@ main {
                 break
             uword text = lyrics.lines[line_idx]
             uword length = string.length(text)
-            uword timestamp_off = c64.RDTIM16() + 60 + length*12
-            while c64.RDTIM16() != timestamp  {
-                if c64.RDTIM16() == timestamp_off {
+            uword timestamp_off = interrupts.vsync_counter + 60 + length*12
+            while interrupts.vsync_counter != timestamp  {
+                if interrupts.vsync_counter == timestamp_off {
                     timestamp_off=0
                     txt.clear_screen()
                 }
@@ -55,6 +54,17 @@ main {
             line_idx++
         }
 
+    }
+}
+
+
+interrupts {
+    uword @shared vsync_counter
+    ubyte @shared vsync_semaphore
+    sub handler() {
+        ; TODO if other irqs are also handled, make sure to check irq type
+        vsync_semaphore=0
+        vsync_counter++
     }
 }
 
@@ -88,8 +98,14 @@ screen {
         init_fade_palette()
     }
 
+    sub reset_video() {
+        cx16.r15L = cx16.VERA_DC_VIDEO & %00000111 ; retain chroma + output mode
+        c64.CINT()
+        cx16.VERA_DC_VIDEO = (cx16.VERA_DC_VIDEO & %11111000) | cx16.r15L
+    }
+
     sub thanks() {
-        c64.CINT()  ; restore video and charset
+        screen.reset_video()
         void cx16.screen_mode(1, false)   ; 80x30  text mode
         ; don't set palette yet, we'll fade it in later
         ;palette.set_color(0, $000)
@@ -98,11 +114,11 @@ screen {
         txt.lowercase()
         txt.color2(2,1)     ; red on white
         txt.clear_screen()
-        txt.plot(5,6)
+        txt.plot(8,6)
         txt.print("You have been listening to")
-        txt.plot(10, 11)
+        txt.plot(13, 11)
         txt.print("'Warning Call' by CHVRCHES")
-        txt.plot(10, 13)
+        txt.plot(13, 13)
         txt.print("from the Mirror's Edge Catalyst game")
         txt.color2(1,2)     ; white on red
         txt.plot(0, 0)
@@ -139,9 +155,9 @@ screen {
 
     sub fade_in(ubyte num_colors) {
         repeat 16 {
-            sys.waitvsync()
-            sys.waitvsync()
-            sys.waitvsync()
+            waitvsync()
+            waitvsync()
+            waitvsync()
             for color in 0 to num_colors-1 {
                 update_palette_entry()
                 if reds[color]!=reds_target[color]
@@ -156,9 +172,9 @@ screen {
 
     sub fade_out(ubyte num_colors) {
         repeat 16 {
-            sys.waitvsync()
-            sys.waitvsync()
-            sys.waitvsync()
+            waitvsync()
+            waitvsync()
+            waitvsync()
             for color in 0 to num_colors-1 {
                 update_palette_entry()
                 if reds[color]
@@ -198,8 +214,8 @@ screen {
     }
 
     sub lores256() {
-        ; 320x240 256 colors
-        c64.CINT()
+        ; 320x240 256 colors + text layer
+        screen.reset_video()
         void cx16.screen_mode($80, false)
         cx16.VERA_L1_CONFIG |= %00001000     ; enable T256C
         txt.color2(%1111, %0111)    ; select text color %01111111 = 127
@@ -213,5 +229,15 @@ screen {
 ;        cx16.VERA_L1_CONFIG = %00000111
 ;        cx16.VERA_L1_MAPBASE = 0
 ;        cx16.VERA_L1_TILEBASE = 0   ; lores
+    }
+
+    asmsub waitvsync() {
+        %asm {{
+-           wai
+            lda  interrupts.vsync_semaphore
+            bne  -
+            inc  interrupts.vsync_semaphore
+            rts
+        }}
     }
 }
