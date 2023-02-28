@@ -81,7 +81,7 @@ if __name__ == "__main__":
     #         # print(f"\t.word  ${rgb:04x}")
     #         outf.write(bytes([g<<4 | b, r]))
 
-    # the demo screen
+    # the demo screens
     img = Image.open("images/demo-lores.png")
     with open("ME-DEMOSCREEN.BIN", "wb") as outf:
         extract_titlescreen_lores256(img, outf)
@@ -92,6 +92,17 @@ if __name__ == "__main__":
             # rgb = (r << 8) | (g << 4) | b
             # print(f"\t.word  ${rgb:04x}")
             outf.write(bytes([g<<4 | b, r]))
+    # img = Image.open("images/demo2-lores.png")
+    # with open("ME-DEMOSCREEN2.BIN", "wb") as outf:
+    #     extract_titlescreen_lores256(img, outf)
+    # with open("ME-DEMOSCREEN2.PAL", "wb") as outf:
+    #     palette = img.getpalette()
+    #     for r, g, b in convert_palette(palette, len(palette)//3):
+    #         # note: have to convert to different order when writing as binary file!
+    #         # rgb = (r << 8) | (g << 4) | b
+    #         # print(f"\t.word  ${rgb:04x}")
+    #         outf.write(bytes([g<<4 | b, r]))
+
 
     # the title screen (hires version)
     img = Image.open("images/title-hires.png")

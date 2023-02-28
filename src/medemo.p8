@@ -10,10 +10,10 @@ main {
 
     sub start() {
         cx16.set_irq(&interrupts.handler, false)
-        screen.prepare_title()
-        screen.fade_in(16)
-        repeat 180 screen.waitvsync()
-        screen.fade_out(16)
+;        screen.prepare_title()
+;        screen.fade_in(16)
+;        repeat 180 screen.waitvsync()
+;        screen.fade_out(16)
 
         screen.prepare_demo()
         screen.fade_in(0)
@@ -32,6 +32,7 @@ main {
         txt.plot(10,10)
         txt.print("****** start *******")
         interrupts.vsync_counter=0
+        interrupts.text_scroll_enabled = true
 
         repeat {
             uword timestamp = lyrics.timestamps[line_idx]
@@ -43,28 +44,87 @@ main {
             while interrupts.vsync_counter != timestamp  {
                 if interrupts.vsync_counter == timestamp_off {
                     timestamp_off=0
-                    txt.clear_screen()
+                    interrupts.text_color = 0
+                    interrupts.text_fade_direction = 1
                 }
                 ; wait till the timestamp hits
             }
 
-            txt.clear_screen()
-            txt.plot(10,10)
+            screen.clear_lyrics_text_screen()
+            palette.set_color(127, screen.text_colors[len(screen.text_colors)-1])
+            txt.plot(20,22)
+            cx16.VERA_L1_HSCROLL_L = 0
+            cx16.VERA_L1_VSCROLL_L = 120
             txt.print(text)
+            interrupts.text_color = len(screen.text_colors)-1
+            interrupts.text_fade_direction = 2
             line_idx++
         }
 
+        interrupts.text_scroll_enabled = false
     }
 }
 
 
 interrupts {
-    uword @shared vsync_counter
-    ubyte @shared vsync_semaphore
+    const ubyte FADE_SPEED = 2
+    const ubyte HSCROLL_SPEED = 3
+    const ubyte VSCROLL_SPEED = 6
+    uword vsync_counter
+    ubyte vsync_semaphore
+    ubyte text_color
+    ubyte text_fade_direction = 0      ; 1=fade out (++), 2=fade in (--)
+    ubyte hscroll_cnt = 0
+    ubyte vscroll_cnt = 0
+    ubyte fade_count = FADE_SPEED
+    bool text_scroll_enabled = false
+
     sub handler() {
         ; TODO if other irqs are also handled, make sure to check irq type
         vsync_semaphore=0
         vsync_counter++
+
+        cx16.push_vera_context()
+        when text_fade_direction {
+            1 -> {
+                palette.set_color(127, screen.text_colors[text_color])
+                fade_count--
+                if_neg {
+                    fade_count = FADE_SPEED
+                    text_color++
+                    if text_color==len(screen.text_colors) {
+                        text_fade_direction=0
+                        screen.clear_lyrics_text_screen()
+                    }
+                }
+            }
+            2 -> {
+                palette.set_color(127, screen.text_colors[text_color])
+                fade_count--
+                if_neg {
+                    fade_count = FADE_SPEED
+                    text_color--
+                    if_neg
+                        text_fade_direction=0
+                }
+            }
+        }
+
+        if text_scroll_enabled {
+            hscroll_cnt--
+            if_neg {
+                hscroll_cnt = HSCROLL_SPEED
+                cx16.VERA_L1_HSCROLL_L++
+            }
+            vscroll_cnt--
+            if_neg {
+                vscroll_cnt = VSCROLL_SPEED
+                if cx16.VERA_L1_VSCROLL_L
+                    cx16.VERA_L1_VSCROLL_L--
+            }
+        }
+
+        cx16.pop_vera_context()
     }
 }
 
@@ -72,6 +132,7 @@ interrupts {
 screen {
     uword palette_ptr = memory("palette", 256*2, 0)
 
+    uword[6] text_colors = [$f00, $e02, $d04, $c16, $a28, $738]
     ubyte[256] reds
     ubyte[256] greens
     ubyte[256] blues
@@ -102,6 +163,17 @@ screen {
         cx16.r15L = cx16.VERA_DC_VIDEO & %00000111 ; retain chroma + output mode
         c64.CINT()
         cx16.VERA_DC_VIDEO = (cx16.VERA_DC_VIDEO & %11111000) | cx16.r15L
+    }
+
+    sub clear_lyrics_text_screen() {
+        txt.clear_screen()
+;        uword vaddr = $b000
+;        repeat 32*32 {
+;            cx16.vpoke(1, vaddr, lsb(vaddr))    ; TODO test pattern
+;            vaddr++
+;            cx16.vpoke(1, vaddr, 127)     ; 127 is the text color RED
+;            vaddr++
+;        }
     }
 
     sub thanks() {
@@ -220,15 +292,10 @@ screen {
         cx16.VERA_L1_CONFIG |= %00001000     ; enable T256C
         txt.color2(%1111, %0111)    ; select text color %01111111 = 127
 
-;        cx16.VERA_DC_VIDEO = (cx16.VERA_DC_VIDEO & %11001111) | %00100000      ; enable only layer 1
-;        cx16.VERA_DC_HSCALE = 64
-;        cx16.VERA_DC_VSCALE = 64
-;        cx16.VERA_CTRL = %00000010
-;        cx16.VERA_DC_VSTART = 0
-;        cx16.VERA_DC_VSTOP = 480 /2
-;        cx16.VERA_L1_CONFIG = %00000111
-;        cx16.VERA_L1_MAPBASE = 0
-;        cx16.VERA_L1_TILEBASE = 0   ; lores
+;        cx16.VERA_L1_TILEBASE = %11111011   ; 16x16 tiles
+;        cx16.VERA_L1_CONFIG &= %00001111    ; 32x32 tile map
+
+        screen.clear_lyrics_text_screen()
     }
 
     asmsub waitvsync() {
