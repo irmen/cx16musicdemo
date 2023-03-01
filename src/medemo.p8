@@ -17,7 +17,7 @@ main {
 
         screen.prepare_demo()
         screen.fade_in(0)
-        play_song()
+        ;play_song()
         screen.fade_out(0)
 
         screen.thanks()
@@ -29,14 +29,15 @@ main {
     sub play_song() {
         ubyte line_idx
 
-        screen.text_at(1,4,sc:"****** start *******")
+        screen.text_at(1,4,sc:"!!! start now !!!")  ; TODO remove
         interrupts.vsync_counter=0
         interrupts.text_scroll_enabled = true
 
         repeat {
             uword timestamp = lyrics.timestamps[line_idx]
             if timestamp==$ffff
-                break
+                break  ; end of lyrics sequence.
+
             uword text = lyrics.lines[line_idx]
             uword length = string.length(text)
             uword timestamp_off = interrupts.vsync_counter + 60 + length*12
@@ -46,7 +47,7 @@ main {
                     interrupts.text_color = 0
                     interrupts.text_fade_direction = 1
                 }
-                ; wait till the timestamp hits
+                ; wait till the timestamp arrives
             }
 
             screen.clear_lyrics_text_screen()
@@ -154,6 +155,7 @@ screen {
         lores256()
         void cx16diskio.vload_raw("me-demoscreen.bin", 8, 0, 0)
         void diskio.load_raw(8, "me-demoscreen.pal", palette_ptr)
+        void cx16diskio.vload_raw("me-font.bin", 8, 1, $f000)
         init_fade_palette()
     }
 
@@ -178,7 +180,7 @@ screen {
         uword @zp vaddr = $b000 + col*2 + row*$0040
         while @(text) {
             if @(text)==sc:'|' {
-                row++
+                row+=2
                 vaddr = $b000 + col*2 + row*$0040
                 text++
             }
@@ -201,15 +203,15 @@ screen {
         txt.lowercase()
         txt.color2(2,1)     ; red on white
         txt.clear_screen()
-        txt.plot(8,6)
+        txt.plot(10,6)
         txt.print("You have been listening to")
-        txt.plot(13, 11)
+        txt.plot(15, 11)
         txt.print("'Warning Call' by CHVRCHES")
-        txt.plot(13, 13)
+        txt.plot(15, 13)
         txt.print("from the Mirror's Edge Catalyst game")
         txt.color2(1,2)     ; white on red
         txt.plot(0, 0)
-        repeat 160 {
+        repeat 80*3 {
             txt.spc()
         }
         txt.plot(0, 25)
@@ -308,12 +310,6 @@ screen {
         cx16.VERA_L1_CONFIG |= %00001000    ; enable T256C
         cx16.VERA_L1_TILEBASE = %11111011   ; 16x16 tiles
         cx16.VERA_L1_CONFIG &= %00001111    ; 32x32 tile map
-        ; TODO load proper 16x16 tiles
-        uword vaddr = $f000 + 32*sc:' '
-        repeat 32 {
-            cx16.vpoke(1,vaddr,0)
-            vaddr++
-        }
     }
 
     asmsub waitvsync() {
