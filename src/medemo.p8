@@ -29,7 +29,7 @@ main {
     sub play_song() {
         ubyte line_idx
 
-        screen.text_at(10,10,sc:"****** start *******")
+        screen.text_at(1,4,sc:"****** start *******")
         interrupts.vsync_counter=0
         interrupts.text_scroll_enabled = true
 
@@ -53,7 +53,7 @@ main {
             palette.set_color(127, screen.text_colors[len(screen.text_colors)-1])
             cx16.VERA_L1_HSCROLL_L = 0
             cx16.VERA_L1_VSCROLL_L = 120
-            screen.text_at(20,22,text)
+            screen.text_at(5,10,text)
             interrupts.text_color = len(screen.text_colors)-1
             interrupts.text_fade_direction = 2
             line_idx++
@@ -130,7 +130,7 @@ interrupts {
 screen {
     uword palette_ptr = memory("palette", 256*2, 0)
 
-    uword[6] text_colors = [$f00, $e02, $d04, $c16, $a28, $738]
+    uword[6] text_colors = [$f00, $d02, $b13, $924, $635, $347]
     ubyte[256] reds
     ubyte[256] greens
     ubyte[256] blues
@@ -165,7 +165,8 @@ screen {
 
     sub clear_lyrics_text_screen() {
         uword @zp vaddr = $b000
-        repeat 128*30 {     ; TODO 32*32
+        repeat 32*32 {
+            ; TODO use Vera auto increment
             cx16.vpoke(1, vaddr, sc:' ')
             vaddr++
             cx16.vpoke(1, vaddr, 127)     ; 127 is the text color RED
@@ -182,9 +183,10 @@ screen {
                 active_col_times_two = col*2
                 text++
             }
-            vaddr = $b000 + active_col_times_two + row*$0100     ; TODO row*$0080
+            vaddr = $b000 + active_col_times_two + row*$0040
             cx16.vpoke(1,vaddr,@(text))
-            cx16.vpoke(1,vaddr+1,127)     ; 127 is text color RED
+            vaddr++
+            cx16.vpoke(1,vaddr,127)     ; 127 is text color RED
             active_col_times_two+=2
             text++
         }
@@ -303,13 +305,10 @@ screen {
         ; 320x240 256 colors + text layer
         screen.reset_video()
         void cx16.screen_mode($80, false)
-        cx16.VERA_L1_CONFIG |= %00001000     ; enable T256C
-        txt.color2(%1111, %0111)    ; select text color %01111111 = 127
-
-;        cx16.VERA_L1_TILEBASE = %11111011   ; 16x16 tiles
-;        cx16.VERA_L1_CONFIG &= %00001111    ; 32x32 tile map
-
         screen.clear_lyrics_text_screen()
+        cx16.VERA_L1_CONFIG |= %00001000    ; enable T256C
+        cx16.VERA_L1_TILEBASE = %11111011   ; 16x16 tiles
+        cx16.VERA_L1_CONFIG &= %00001111    ; 32x32 tile map
     }
 
     asmsub waitvsync() {
