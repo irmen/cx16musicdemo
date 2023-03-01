@@ -29,8 +29,7 @@ main {
     sub play_song() {
         ubyte line_idx
 
-        txt.plot(10,10)
-        txt.print("****** start *******")
+        screen.text_at(10,10,sc:"****** start *******")
         interrupts.vsync_counter=0
         interrupts.text_scroll_enabled = true
 
@@ -52,10 +51,9 @@ main {
 
             screen.clear_lyrics_text_screen()
             palette.set_color(127, screen.text_colors[len(screen.text_colors)-1])
-            txt.plot(20,22)
             cx16.VERA_L1_HSCROLL_L = 0
             cx16.VERA_L1_VSCROLL_L = 120
-            txt.print(text)
+            screen.text_at(20,22,text)
             interrupts.text_color = len(screen.text_colors)-1
             interrupts.text_fade_direction = 2
             line_idx++
@@ -166,14 +164,30 @@ screen {
     }
 
     sub clear_lyrics_text_screen() {
-        txt.clear_screen()
-;        uword vaddr = $b000
-;        repeat 32*32 {
-;            cx16.vpoke(1, vaddr, lsb(vaddr))    ; TODO test pattern
-;            vaddr++
-;            cx16.vpoke(1, vaddr, 127)     ; 127 is the text color RED
-;            vaddr++
-;        }
+        uword @zp vaddr = $b000
+        repeat 128*30 {     ; TODO 32*32
+            cx16.vpoke(1, vaddr, sc:' ')
+            vaddr++
+            cx16.vpoke(1, vaddr, 127)     ; 127 is the text color RED
+            vaddr++
+        }
+    }
+
+    sub text_at(ubyte col, ubyte row, str text) {
+        ubyte active_col_times_two = col*2
+        uword @zp vaddr
+        while @(text) {
+            if @(text)==sc:'|' {
+                row++
+                active_col_times_two = col*2
+                text++
+            }
+            vaddr = $b000 + active_col_times_two + row*$0100     ; TODO row*$0080
+            cx16.vpoke(1,vaddr,@(text))
+            cx16.vpoke(1,vaddr+1,127)     ; 127 is text color RED
+            active_col_times_two+=2
+            text++
+        }
     }
 
     sub thanks() {

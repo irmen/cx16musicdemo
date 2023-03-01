@@ -55,11 +55,11 @@ def generate_code(triggers: list[Trigger]) -> None:
     print("    ]")
     print("    str[] lines = [")
     for idx, trigger in enumerate(triggers):
-        line = "\n".join(trigger.text).lower()
+        line = "|".join(trigger.text).lower()
         if idx == len(triggers) - 1:
             print('        ""')
         else:
-            print(f'        "{repr(line)[1:-1]}",')
+            print(f'        sc:"{repr(line)[1:-1]}",')
     print("    ]")
     print("}")
 
