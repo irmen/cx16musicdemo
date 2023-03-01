@@ -82,7 +82,7 @@ if __name__ == "__main__":
     #         outf.write(bytes([g<<4 | b, r]))
 
     # the demo screens
-    img = Image.open("images/demo-lores.png")
+    img = Image.open("images/demo3-lores.png")
     with open("ME-DEMOSCREEN.BIN", "wb") as outf:
         extract_titlescreen_lores256(img, outf)
     with open("ME-DEMOSCREEN.PAL", "wb") as outf:

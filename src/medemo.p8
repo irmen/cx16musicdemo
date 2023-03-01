@@ -53,7 +53,7 @@ main {
             palette.set_color(127, screen.text_colors[len(screen.text_colors)-1])
             cx16.VERA_L1_HSCROLL_L = 0
             cx16.VERA_L1_VSCROLL_L = 120
-            screen.text_at(5,10,text)
+            screen.text_at(4,10,text)
             interrupts.text_color = len(screen.text_colors)-1
             interrupts.text_fade_direction = 2
             line_idx++
@@ -175,19 +175,18 @@ screen {
     }
 
     sub text_at(ubyte col, ubyte row, str text) {
-        ubyte active_col_times_two = col*2
-        uword @zp vaddr
+        uword @zp vaddr = $b000 + col*2 + row*$0040
         while @(text) {
             if @(text)==sc:'|' {
                 row++
-                active_col_times_two = col*2
+                vaddr = $b000 + col*2 + row*$0040
                 text++
             }
-            vaddr = $b000 + active_col_times_two + row*$0040
+            ; TODO use Vera autoincrement
             cx16.vpoke(1,vaddr,@(text))
             vaddr++
             cx16.vpoke(1,vaddr,127)     ; 127 is text color RED
-            active_col_times_two+=2
+            vaddr++
             text++
         }
     }
@@ -309,6 +308,12 @@ screen {
         cx16.VERA_L1_CONFIG |= %00001000    ; enable T256C
         cx16.VERA_L1_TILEBASE = %11111011   ; 16x16 tiles
         cx16.VERA_L1_CONFIG &= %00001111    ; 32x32 tile map
+        ; TODO load proper 16x16 tiles
+        uword vaddr = $f000 + 32*sc:' '
+        repeat 32 {
+            cx16.vpoke(1,vaddr,0)
+            vaddr++
+        }
     }
 
     asmsub waitvsync() {
