@@ -4,20 +4,18 @@
 %import lyrics
 %import string
 
-%zeropage basicsafe
-
 main {
 
     sub start() {
         cx16.set_irq(&interrupts.handler, false)
-;        screen.prepare_title()
-;        screen.fade_in(16)
-;        repeat 180 screen.waitvsync()
-;        screen.fade_out(16)
+        screen.prepare_title()
+        screen.fade_in(16)
+        repeat 180 screen.waitvsync()
+        screen.fade_out(16)
 
         screen.prepare_demo()
         screen.fade_in(0)
-        ;play_song()
+        play_song()
         screen.fade_out(0)
 
         screen.thanks()
@@ -167,28 +165,26 @@ screen {
 
     sub clear_lyrics_text_screen() {
         uword @zp vaddr = $b000
+        cx16.vaddr(1, $b000, 0, true)
         repeat 32*32 {
-            ; TODO use Vera auto increment
-            cx16.vpoke(1, vaddr, sc:' ')
-            vaddr++
-            cx16.vpoke(1, vaddr, 127)     ; 127 is the text color RED
-            vaddr++
+            cx16.VERA_DATA0 = sc:' '
+            cx16.VERA_DATA0 = 127     ; 127 is the text color RED
         }
     }
 
     sub text_at(ubyte col, ubyte row, str text) {
-        uword @zp vaddr = $b000 + col*2 + row*$0040
+        sub get_vaddr() -> uword {
+            return $b000 + col*2 + row*$0040
+        }
+        cx16.vaddr(1, get_vaddr(), 0, true)
         while @(text) {
             if @(text)==sc:'|' {
-                row+=2
-                vaddr = $b000 + col*2 + row*$0040
                 text++
+                row+=2
+                cx16.vaddr(1, get_vaddr(), 0, true)
             }
-            ; TODO use Vera autoincrement
-            cx16.vpoke(1,vaddr,@(text))
-            vaddr++
-            cx16.vpoke(1,vaddr,127)     ; 127 is text color RED
-            vaddr++
+            cx16.VERA_DATA0 = @(text)
+            cx16.VERA_DATA0 = 127        ; 127 is text color RED
             text++
         }
     }

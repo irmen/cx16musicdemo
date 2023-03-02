@@ -1,5 +1,4 @@
 from PIL import Image
-from PIL import ImageDraw
 
 
 def convert_palette(palette, num_colors):
@@ -61,7 +60,7 @@ assert screencodes[42] == '*'
 
 
 if __name__ == "__main__":
-    # the font
+    # the font tiles
     img = Image.open("images/font1.png")
     with open("ME-FONT.BIN", "wb") as outf:
         tiles = {}
@@ -75,7 +74,7 @@ if __name__ == "__main__":
             else:
                 outf.write(bytearray(32))
 
-    # the demo screens
+    # the demo screen(s)
     img = Image.open("images/demo3-lores.png")
     with open("ME-DEMOSCREEN.BIN", "wb") as outf:
         extract_titlescreen_lores256(img, outf)
