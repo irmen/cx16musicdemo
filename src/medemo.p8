@@ -1,22 +1,34 @@
 %import cx16diskio
 %import diskio
 %import palette
-%import lyrics
 %import string
+%import adpcm
+%import lyrics
+
+; NOTE: there is no error handling for missing data files.
+;       everything is supposed to be there on the sd card with proper names.
+
 
 main {
 
     sub start() {
-        cx16.set_irq(&interrupts.handler, false)
+
+        sys.set_irqd()
+        cx16.CINV = &interrupts.handler     ; cannot use cx16.set_irq() because we're dealing with AFLOW irqs as well
+        sys.clear_irqd()
+
         screen.prepare_title()
         screen.fade_in(16)
         repeat 180 screen.waitvsync()
         screen.fade_out(16)
 
         screen.prepare_demo()
+        audio.init()
         screen.fade_in(0)
-        play_song()
+        audio.start()
+        play_demo()
         screen.fade_out(0)
+        audio.stop()
 
         screen.thanks()
 
@@ -24,10 +36,8 @@ main {
         }
     }
 
-    sub play_song() {
+    sub play_demo() {
         ubyte line_idx
-
-        screen.text_at(1,4,sc:"!!! start now !!!")  ; TODO remove
         interrupts.vsync_counter=0
         interrupts.text_scroll_enabled = true
 
@@ -39,13 +49,20 @@ main {
             uword text = lyrics.lines[line_idx]
             uword length = string.length(text)
             uword timestamp_off = interrupts.vsync_counter + 60 + length*12
-            while interrupts.vsync_counter != timestamp  {
-                if interrupts.vsync_counter == timestamp_off {
-                    timestamp_off=0
-                    interrupts.text_color = 0
-                    interrupts.text_fade_direction = 1
+
+            while interrupts.vsync_counter < timestamp  {
+                if timestamp_off {
+                    if interrupts.vsync_counter >= timestamp_off {
+                        timestamp_off=0
+                        interrupts.text_color = 0
+                        interrupts.text_fade_direction = 1
+                    }
                 }
-                ; wait till the timestamp arrives
+
+                if interrupts.aflow_semaphore==0 {
+                    interrupts.aflow_semaphore++
+                    audio.load_next_block()
+                }
             }
 
             screen.clear_lyrics_text_screen()
@@ -68,7 +85,8 @@ interrupts {
     const ubyte HSCROLL_SPEED = 3
     const ubyte VSCROLL_SPEED = 6
     uword vsync_counter
-    ubyte vsync_semaphore
+    ubyte vsync_semaphore = 1
+    ubyte aflow_semaphore = 1
     ubyte text_color
     ubyte text_fade_direction = 0      ; 1=fade out (++), 2=fade in (--)
     ubyte hscroll_cnt = 0
@@ -77,51 +95,64 @@ interrupts {
     bool text_scroll_enabled = false
 
     sub handler() {
-        ; TODO if other irqs are also handled, make sure to check irq type
-        vsync_semaphore=0
-        vsync_counter++
-
-        cx16.push_vera_context()
-        when text_fade_direction {
-            1 -> {
-                palette.set_color(127, screen.text_colors[text_color])
-                fade_count--
-                if_neg {
-                    fade_count = FADE_SPEED
-                    text_color++
-                    if text_color==len(screen.text_colors) {
-                        text_fade_direction=0
-                        screen.clear_lyrics_text_screen()
+        if cx16.VERA_ISR & %00001000 {
+            ; AFLOW irq occurred, refill buffer
+            aflow_semaphore=0
+            audio.decode_adpcm_block()
+        } else if cx16.VERA_ISR & %00000001 {
+            vsync_semaphore=0
+            vsync_counter++
+            cx16.push_vera_context()
+            when text_fade_direction {
+                1 -> {
+                    palette.set_color(127, screen.text_colors[text_color])
+                    fade_count--
+                    if_neg {
+                        fade_count = FADE_SPEED
+                        text_color++
+                        if text_color==len(screen.text_colors) {
+                            text_fade_direction=0
+                            screen.clear_lyrics_text_screen()
+                        }
+                    }
+                }
+                2 -> {
+                    palette.set_color(127, screen.text_colors[text_color])
+                    fade_count--
+                    if_neg {
+                        fade_count = FADE_SPEED
+                        text_color--
+                        if_neg
+                            text_fade_direction=0
                     }
                 }
             }
-            2 -> {
-                palette.set_color(127, screen.text_colors[text_color])
-                fade_count--
+
+            if text_scroll_enabled {
+                hscroll_cnt--
                 if_neg {
-                    fade_count = FADE_SPEED
-                    text_color--
-                    if_neg
-                        text_fade_direction=0
+                    hscroll_cnt = HSCROLL_SPEED
+                    cx16.VERA_L1_HSCROLL_L++
+                }
+                vscroll_cnt--
+                if_neg {
+                    vscroll_cnt = VSCROLL_SPEED
+                    if cx16.VERA_L1_VSCROLL_L
+                        cx16.VERA_L1_VSCROLL_L--
                 }
             }
+
+            cx16.pop_vera_context()
+
+            cx16.VERA_ISR = %00000001
         }
 
-        if text_scroll_enabled {
-            hscroll_cnt--
-            if_neg {
-                hscroll_cnt = HSCROLL_SPEED
-                cx16.VERA_L1_HSCROLL_L++
-            }
-            vscroll_cnt--
-            if_neg {
-                vscroll_cnt = VSCROLL_SPEED
-                if cx16.VERA_L1_VSCROLL_L
-                    cx16.VERA_L1_VSCROLL_L--
-            }
-        }
-
-        cx16.pop_vera_context()
+        %asm {{
+            ply
+            plx
+            pla
+            rti
+        }}
     }
 }
 
@@ -316,5 +347,59 @@ screen {
             inc  interrupts.vsync_semaphore
             rts
         }}
+    }
+}
+
+
+audio {
+
+    ubyte[256] buffer
+
+    sub init() {
+        cx16.VERA_AUDIO_RATE = 0                ; halt playback
+        cx16.VERA_AUDIO_CTRL = %10101111        ; mono 16 bit
+        repeat 1024
+            cx16.VERA_AUDIO_DATA = 0            ; fill buffer with short silence
+        cx16.VERA_IEN |= %00001000              ; enable AFLOW irq too
+
+        if not diskio.f_open(8, "me-music.adpcm")
+            sys.exit(1)
+        if cx16diskio.f_read(buffer, 256)<256
+            sys.exit(1)
+    }
+
+    sub start() {
+        cx16.VERA_AUDIO_RATE = 42               ; start playback at 16021 Hz
+    }
+
+    sub stop() {
+        diskio.f_close()
+        cx16.VERA_AUDIO_RATE = 0
+        cx16.VERA_AUDIO_CTRL = %10100000
+        cx16.VERA_IEN = %00000001               ; enable only VSYNC irq
+    }
+
+    sub load_next_block() {
+        if cx16diskio.f_read(buffer, 256)<256
+            sys.exit(1)
+    }
+
+    sub decode_adpcm_block() {
+        ; refill the fifo buffer with one decoded adpcm block (1010 bytes of pcm data)
+        uword @requirezp nibblesptr = &buffer
+        adpcm.init(peekw(nibblesptr), @(nibblesptr+2))
+        cx16.VERA_AUDIO_DATA = lsb(adpcm.predict)
+        cx16.VERA_AUDIO_DATA = msb(adpcm.predict)
+        nibblesptr += 4
+        repeat 252 {
+           ubyte @zp nibble = @(nibblesptr)
+           adpcm.decode_nibble(nibble & 15)     ; first word
+           cx16.VERA_AUDIO_DATA = lsb(adpcm.predict)
+           cx16.VERA_AUDIO_DATA = msb(adpcm.predict)
+           adpcm.decode_nibble(nibble>>4)       ; second word
+           cx16.VERA_AUDIO_DATA = lsb(adpcm.predict)
+           cx16.VERA_AUDIO_DATA = msb(adpcm.predict)
+           nibblesptr++
+        }
     }
 }
