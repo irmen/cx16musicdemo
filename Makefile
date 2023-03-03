@@ -3,7 +3,7 @@
 all:  MEDEMO.PRG
 
 clean:
-	rm -f *.prg *.PRG *.asm *.vice-* *.BIN *.PAL *.ADPCM *.zip *.7z src/lyrics.p8
+	rm -f *.prg *.PRG *.asm *.vice-* *.BIN *.PAL *.ADPCM *.zip *.7z *.zip src/lyrics.p8
 
 emu:  MEDEMO.PRG
 	# PULSE_LATENCY_MSEC=20 box16 -scale 2 -run -prg $<
@@ -19,7 +19,7 @@ ME-DEMOSCREEN.BIN ME-DEMOSCREEN.PAL ME-TITLESCREEN.BIN ME-TITLESCREEN.PAL ME-FON
 src/lyrics.p8: src/convertlyrics.py src/lyrics.txt
 	python src/convertlyrics.py > $@
 
-ME-MUSIC.ADPCM: music/chvrches-warning-call.wav
+ME-MUSIC.ADPCM: music/chvrches-warning-call.mp3
 	sox $< -c 1 -r 16021 music.temp.wav
 	adpcm-xq -y -b8 -4 -r music.temp.wav $@
 	rm music.temp.wav
