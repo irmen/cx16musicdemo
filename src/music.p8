@@ -1,3 +1,54 @@
+music {
+
+    ubyte[256] buffer
+
+    sub init(str musicfile) {
+        cx16.VERA_AUDIO_RATE = 0                ; halt playback
+        cx16.VERA_AUDIO_CTRL = %10101111        ; mono 16 bit
+        repeat 1024
+            cx16.VERA_AUDIO_DATA = 0            ; fill buffer with short silence
+        cx16.VERA_IEN |= %00001000              ; enable AFLOW irq too
+
+        void diskio.f_open(8, musicfile)
+        void cx16diskio.f_read(buffer, 256)
+    }
+
+    sub start() {
+        cx16.VERA_AUDIO_RATE = 42               ; start playback at 16021 Hz
+    }
+
+    sub stop() {
+        diskio.f_close()
+        cx16.VERA_AUDIO_RATE = 0
+        cx16.VERA_AUDIO_CTRL = %10100000
+        cx16.VERA_IEN = %00000001               ; enable only VSYNC irq
+    }
+
+    sub load_next_block() {
+        void cx16diskio.f_read(buffer, 256)
+    }
+
+    sub decode_adpcm_block() {
+        ; refill the fifo buffer with one decoded adpcm block (1010 bytes of pcm data)
+        uword @requirezp nibblesptr = &buffer
+        adpcm.init(peekw(nibblesptr), @(nibblesptr+2))
+        cx16.VERA_AUDIO_DATA = lsb(adpcm.predict)
+        cx16.VERA_AUDIO_DATA = msb(adpcm.predict)
+        nibblesptr += 4
+        repeat 252 {
+           ubyte @zp nibble = @(nibblesptr)
+           adpcm.decode_nibble(nibble & 15)     ; first word
+           cx16.VERA_AUDIO_DATA = lsb(adpcm.predict)
+           cx16.VERA_AUDIO_DATA = msb(adpcm.predict)
+           adpcm.decode_nibble(nibble>>4)       ; second word
+           cx16.VERA_AUDIO_DATA = lsb(adpcm.predict)
+           cx16.VERA_AUDIO_DATA = msb(adpcm.predict)
+           nibblesptr++
+        }
+    }
+}
+
+
 adpcm {
 
     ; IMA ADPCM decoder.

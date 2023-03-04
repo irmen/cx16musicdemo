@@ -1,3 +1,4 @@
+import sys
 import time
 
 FRAME_RATE = 25e6/(525*800)      # vga doesn't run exactly at 1/60 seconds!
@@ -14,10 +15,10 @@ class Trigger:
         self.text.append(text)
 
 
-def load_source() -> list[Trigger]:
+def load_source(filename) -> list[Trigger]:
     triggers = []
     trigger = Trigger(-1, "")
-    lyrics = open("src/lyrics.txt").readlines()[2:]
+    lyrics = open(filename).readlines()[2:]
     previous_timestamp = 0.0
     for line in lyrics:
         line = line.rstrip()
@@ -82,6 +83,6 @@ def playback(triggers: list[Trigger]) -> None:
 
 
 if __name__ == "__main__":
-    triggers = load_source()
+    triggers = load_source(sys.argv[1])
     generate_code(triggers)
     # playback(triggers)

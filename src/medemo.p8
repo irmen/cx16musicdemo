@@ -2,8 +2,8 @@
 %import diskio
 %import palette
 %import string
-%import adpcm
-%import lyrics
+%import music
+%import melyrics
 
 ; NOTE: there is no error handling for missing data files.
 ;       everything is supposed to be there on the sd card with proper names.
@@ -23,12 +23,12 @@ main {
         screen.fade_out(16)
 
         screen.prepare_demo()
-        audio.init()
+        music.init("me-music.adpcm")
         screen.fade_in(0)
-        audio.start()
+        music.start()
         play_demo()
         screen.fade_out(0)
-        audio.stop()
+        music.stop()
 
         screen.thanks()
 
@@ -61,7 +61,7 @@ main {
 
                 if interrupts.aflow_semaphore==0 {
                     interrupts.aflow_semaphore++
-                    audio.load_next_block()
+                    music.load_next_block()
                 }
             }
 
@@ -98,7 +98,7 @@ interrupts {
         if cx16.VERA_ISR & %00001000 {
             ; AFLOW irq occurred, refill buffer
             aflow_semaphore=0
-            audio.decode_adpcm_block()
+            music.decode_adpcm_block()
         } else if cx16.VERA_ISR & %00000001 {
             vsync_semaphore=0
             vsync_counter++
@@ -347,59 +347,5 @@ screen {
             inc  interrupts.vsync_semaphore
             rts
         }}
-    }
-}
-
-
-audio {
-
-    ubyte[256] buffer
-
-    sub init() {
-        cx16.VERA_AUDIO_RATE = 0                ; halt playback
-        cx16.VERA_AUDIO_CTRL = %10101111        ; mono 16 bit
-        repeat 1024
-            cx16.VERA_AUDIO_DATA = 0            ; fill buffer with short silence
-        cx16.VERA_IEN |= %00001000              ; enable AFLOW irq too
-
-        if not diskio.f_open(8, "me-music.adpcm")
-            sys.exit(1)
-        if cx16diskio.f_read(buffer, 256)<256
-            sys.exit(1)
-    }
-
-    sub start() {
-        cx16.VERA_AUDIO_RATE = 42               ; start playback at 16021 Hz
-    }
-
-    sub stop() {
-        diskio.f_close()
-        cx16.VERA_AUDIO_RATE = 0
-        cx16.VERA_AUDIO_CTRL = %10100000
-        cx16.VERA_IEN = %00000001               ; enable only VSYNC irq
-    }
-
-    sub load_next_block() {
-        if cx16diskio.f_read(buffer, 256)<256
-            sys.exit(1)
-    }
-
-    sub decode_adpcm_block() {
-        ; refill the fifo buffer with one decoded adpcm block (1010 bytes of pcm data)
-        uword @requirezp nibblesptr = &buffer
-        adpcm.init(peekw(nibblesptr), @(nibblesptr+2))
-        cx16.VERA_AUDIO_DATA = lsb(adpcm.predict)
-        cx16.VERA_AUDIO_DATA = msb(adpcm.predict)
-        nibblesptr += 4
-        repeat 252 {
-           ubyte @zp nibble = @(nibblesptr)
-           adpcm.decode_nibble(nibble & 15)     ; first word
-           cx16.VERA_AUDIO_DATA = lsb(adpcm.predict)
-           cx16.VERA_AUDIO_DATA = msb(adpcm.predict)
-           adpcm.decode_nibble(nibble>>4)       ; second word
-           cx16.VERA_AUDIO_DATA = lsb(adpcm.predict)
-           cx16.VERA_AUDIO_DATA = msb(adpcm.predict)
-           nibblesptr++
-        }
     }
 }
