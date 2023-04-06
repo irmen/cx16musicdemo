@@ -44,25 +44,28 @@ def load_source(filename) -> list[Trigger]:
     return triggers
 
 
-def generate_code(triggers: list[Trigger]) -> None:
-    print("; this code is generated")
-    print("lyrics {")
-    print("    const ubyte LINECOUNT =", len(triggers))
-    print("    uword[] timestamps = [     ; in jiffies")
+def generate_code(triggers: list[Trigger]) -> str:
+    r = [
+        "; this code is generated",
+        "lyrics {",
+        f"    const ubyte LINECOUNT = {len(triggers)}",
+        "    uword[] timestamps = [     ; in jiffies"
+    ]
     for trigger in triggers:
         jiffies = int(trigger.timestamp * FRAME_RATE)
-        print(f"        {jiffies},")
-    print(f"        $ffff  ; end")
-    print("    ]")
-    print("    str[] lines = [")
+        r.append(f"        {jiffies},")
+    r.append(f"        $ffff  ; end")
+    r.append("    ]")
+    r.append("    str[] lines = [")
     for idx, trigger in enumerate(triggers):
         line = "|".join(trigger.text).lower()
         if idx == len(triggers) - 1:
-            print('        ""')
+            r.append('        ""')
         else:
-            print(f'        sc:"{repr(line)[1:-1]}",')
-    print("    ]")
-    print("}")
+            r.append(f'        sc:"{repr(line)[1:-1]}",')
+    r.append("    ]")
+    r.append("}")
+    return "\n".join(r)
 
 
 def playback(triggers: list[Trigger]) -> None:
@@ -84,5 +87,7 @@ def playback(triggers: list[Trigger]) -> None:
 
 if __name__ == "__main__":
     triggers = load_source(sys.argv[1])
-    generate_code(triggers)
+    result = generate_code(triggers)
     # playback(triggers)
+    with open(sys.argv[2], "w") as out:
+        out.write(result)
