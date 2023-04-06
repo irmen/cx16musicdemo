@@ -13,11 +13,11 @@ run-ds:  DSDEMO.PRG
 	# PULSE_LATENCY_MSEC=20 box16 -scale 2 -run -prg $<
 	PULSE_LATENCY_MSEC=20 x16emu -scale 2 -quality best -run -prg $<
 
-MEDEMO.PRG: src/medemo.p8 src/music.p8 src/melyrics.p8 ME-TITLESCREEN.BIN ME-TITLESCREEN.PAL ME-DEMOSCREEN.BIN ME-DEMOSCREEN.PAL ME-FONT.BIN ME-MUSIC.ADPCM
+MEDEMO.PRG: src/medemo.p8 src/music.p8 src/melyrics.p8 src/demo_engine.p8 ME-TITLESCREEN.BIN ME-TITLESCREEN.PAL ME-DEMOSCREEN.BIN ME-DEMOSCREEN.PAL ME-FONT.BIN ME-MUSIC.ADPCM
 	p8compile $< -target cx16
 	mv medemo.prg MEDEMO.PRG
 
-DSDEMO.PRG: src/dsdemo.p8 src/music.p8 src/dslyrics.p8 DS-TITLESCREEN.BIN DS-TITLESCREEN.PAL DS-DEMOSCREEN.BIN DS-DEMOSCREEN.PAL DS-FONT.BIN DS-MUSIC.ADPCM
+DSDEMO.PRG: src/dsdemo.p8 src/music.p8 src/dslyrics.p8 src/demo_engine.p8 DS-TITLESCREEN.BIN DS-TITLESCREEN.PAL DS-DEMOSCREEN.BIN DS-DEMOSCREEN.PAL DS-FONT.BIN DS-MUSIC.ADPCM
 	p8compile $< -target cx16
 	mv dsdemo.prg DSDEMO.PRG
 
