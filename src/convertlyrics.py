@@ -1,3 +1,4 @@
+import os
 import sys
 import time
 
@@ -44,7 +45,8 @@ def load_source(filename) -> list[Trigger]:
     return triggers
 
 
-def generate_code(triggers: list[Trigger]) -> str:
+def generate_code(triggers: list[Trigger], block_per_second: float) -> str:
+    print("adpcm blocks per second:", block_per_second)
     r = [
         "; this code is generated",
         "lyrics {",
@@ -85,9 +87,31 @@ def playback(triggers: list[Trigger]) -> None:
         print()
 
 
+ADPCM_BLOCK_SIZE = 256
+SAMPLE_RATE = 16021         # make sure this matches the Sr used for the music conversion
+
+
+def calculate_bps(adpcmfile) -> float:
+    adpcm_size = os.stat(adpcmfile).st_size
+    adpcm_blocks = adpcm_size / ADPCM_BLOCK_SIZE
+    # sample_rate = float(subprocess.getoutput(f"soxi -r {wavfile}"))
+    # duration = float(subprocess.getoutput(f"soxi -D {wavfile}"))
+    # blocks_per_second = adpcm_blocks / duration
+    # print(f"\nStats for music file {adpcmfile}")
+    # print(f"# adpcm blocks: {adpcm_blocks}  duration: {duration} sec.  --> {blocks_per_second} blocks per second.")
+    total_decoded_samples = adpcm_blocks * 505
+    decoded_duration = total_decoded_samples / SAMPLE_RATE
+    blocks_per_second = adpcm_blocks / decoded_duration
+    # print(f"\nStats for music file {adpcmfile}")
+    # print(f"# adpcm blocks: {adpcm_blocks}  duration: {decoded_duration} sec.  --> {blocks_per_second} blocks per second.")
+    # print()
+    return blocks_per_second
+
+
 if __name__ == "__main__":
+    bps = calculate_bps(sys.argv[3])
     triggers = load_source(sys.argv[1])
-    result = generate_code(triggers)
+    result = generate_code(triggers, bps)       # TODO actually use bps instead of vsync timing
     # playback(triggers)
     with open(sys.argv[2], "w") as out:
         out.write(result)

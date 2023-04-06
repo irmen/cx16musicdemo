@@ -73,7 +73,6 @@ screen {
     }
 
     sub clear_lyrics_text_screen() {
-        uword @zp vaddr = $b000
         cx16.vaddr(1, $b000, 0, true)
         repeat 32*32 {
             cx16.VERA_DATA0 = sc:' '
