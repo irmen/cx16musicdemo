@@ -12,7 +12,8 @@
 demo_engine {
     sub play_demo() {
         ubyte line_idx
-        interrupts.vsync_counter=0
+        interrupts.vsync_counter = 0    ; not really used anymore, lyrics timings are now synced on audio block counter
+        music.blocks_counter = 0
         interrupts.text_scroll_enabled = true
 
         repeat {
@@ -22,11 +23,11 @@ demo_engine {
 
             uword text = lyrics.lines[line_idx]
             uword length = string.length(text)
-            uword timestamp_off = interrupts.vsync_counter + 60 + length*12
+            uword timestamp_off = music.blocks_counter + length*6 + 30
 
-            while interrupts.vsync_counter < timestamp  {
+            while music.blocks_counter < timestamp  {
                 if timestamp_off {
-                    if interrupts.vsync_counter >= timestamp_off {
+                    if music.blocks_counter >= timestamp_off {
                         timestamp_off=0
                         interrupts.text_color = 0
                         interrupts.text_fade_direction = 1

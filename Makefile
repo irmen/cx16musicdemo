@@ -42,13 +42,11 @@ ME-MUSIC.ADPCM: music/chvrches-warning-call.mp3
 	sox $< -c 1 -r 16021 music.temp.wav
 	adpcm-xq -y -b8 -4 -r music.temp.wav $@
 	@rm music.temp.wav
-	@python src/musicstats.py $@
 
 DS-MUSIC.ADPCM: music/chvrches-deathstranding.mp3
 	sox $< -c 1 -r 16021 music.temp.wav
 	adpcm-xq -y -b8 -4 -r music.temp.wav $@
 	@rm music.temp.wav
-	@python src/musicstats.py $@
 
 zip: all
 	@rm -f medemo.zip dsdemo.zip

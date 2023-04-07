@@ -2,7 +2,9 @@ import os
 import sys
 import time
 
-FRAME_RATE = 25e6/(525*800)      # vga doesn't run exactly at 1/60 seconds!
+# we used co calculate the sync based on number of frames displayed (vsync synced)
+# but that is inaccurate as this depends on screen mode and such.
+# FRAME_RATE = 25e6/(525*800)      # vga doesn't run exactly at 1/60 seconds!
 
 
 class Trigger:
@@ -45,17 +47,17 @@ def load_source(filename) -> list[Trigger]:
     return triggers
 
 
-def generate_code(triggers: list[Trigger], block_per_second: float) -> str:
-    print("adpcm blocks per second:", block_per_second)
+def generate_code(triggers: list[Trigger], blocks_per_second: float) -> str:
+    print("adpcm blocks per second:", blocks_per_second)
     r = [
         "; this code is generated",
         "lyrics {",
         f"    const ubyte LINECOUNT = {len(triggers)}",
-        "    uword[] timestamps = [     ; in jiffies"
+        "    uword[] timestamps = [     ; in blocks"
     ]
     for trigger in triggers:
-        jiffies = int(trigger.timestamp * FRAME_RATE)
-        r.append(f"        {jiffies},")
+        blocks = int(trigger.timestamp * blocks_per_second)
+        r.append(f"        {blocks},")
     r.append(f"        $ffff  ; end")
     r.append("    ]")
     r.append("    str[] lines = [")
@@ -70,15 +72,15 @@ def generate_code(triggers: list[Trigger], block_per_second: float) -> str:
     return "\n".join(r)
 
 
-def playback(triggers: list[Trigger]) -> None:
+def playback(triggers: list[Trigger], blocks_per_second: float) -> None:
     start_ns = time.monotonic_ns()
     for trigger in triggers:
         if trigger.timestamp == 0.0:
             print("zero timestamp, unfinished sync?")
             raise SystemExit(1)
-        timestamp_jiffies = int(trigger.timestamp * FRAME_RATE)
-        print("(next at", trigger.timestamp, " jiffies=", timestamp_jiffies,")\n")
-        timestamp_ns = int(timestamp_jiffies/FRAME_RATE * 1e9)
+        timestamp_blocks = int(trigger.timestamp * blocks_per_second)
+        print("(next at", trigger.timestamp, " blocks=", timestamp_blocks,")\n")
+        timestamp_ns = int(timestamp_blocks/blocks_per_second * 1e9)
         while time.monotonic_ns() - start_ns < timestamp_ns:
             pass
         for index, text in enumerate(trigger.text):
@@ -111,7 +113,7 @@ def calculate_bps(adpcmfile) -> float:
 if __name__ == "__main__":
     bps = calculate_bps(sys.argv[3])
     triggers = load_source(sys.argv[1])
-    result = generate_code(triggers, bps)       # TODO actually use bps instead of vsync timing
+    result = generate_code(triggers, bps)
     # playback(triggers)
     with open(sys.argv[2], "w") as out:
         out.write(result)
