@@ -1,51 +1,169 @@
 time    01234567890123456789  (col 30 is max)
 --------|--------------------|
-0001.000 <END>
+0008.400 Let's
+         make a toast
+         to the damned
+0014.224 Waiting for
+         tomorrow
+0016.341 When
+         we're played out
+         by the band
+0022.000 Drowning out
+         our sorrows
+0024.271 What
+         will become
+         of us now
+0029.368 at the end of time?
+0033.297 We'll be fine,
+         you and I
+
+0039.890 Let's
+         draw a line
+         in the sand
+0045.342 Keep it straight
+         and narrow
+0047.890 We
+         had it all
+         in our hands
+0053.194 We begged and
+         then we borrowed
+0055.706 What
+         will become
+         of us all
+0060.854 at the end of love?
+0064.782 When we've stopped
+         looking up?
+
+0070.952 You can take
+         my heart
+0077.183 And hold it together
+         as we fall apart
+0085.131 Maybe together
+         we can make a mark
+0089.099 in the stars
+         we embark
+0092.801 And keep us together
+         as the lights go dark
+
+0102.894 Let's
+         tell the truth,
+         just for once
+0108.544 asking for
+         an answer
+0110.706 Now
+         that it's all
+         said and done
+0116.400 nothing
+         really matters
+0118.693 What
+         will become
+         of us all
+0123.818 if we dare to dream?
+0127.775 At the end
+         of the scene?
+
+0133.860 You can take
+         my heart
+0140.283 hold it together
+         as we fall apart
+0148.095 Maybe together
+         we can make a mark
+0152.000 in the stars
+         we embark
+0156.030 Keep us together
+         as the lights go dark
+
+0197.191 Let's
+         open up
+         to the sky
+0202.988 askin' it
+         for closure
+0205.280 'Least
+         we can say
+         that we tried
+0210.360 but it's never
+         really over
+0213.018 What
+         will become
+         of us all
+0218.183 at the end of
+         the line?
+0222.168 Will we live?
+         Will we die?
+
+0228.219 You can take
+         my heart
+0234.372 And hold it together
+         as we fall apart
+0242.517 Maybe together
+         we can make a mark
+0246.541 in the stars
+         we embark
+0250.187 And keep us together
+         as the lights go dark
+
+0259.625 And you can take
+         my heart
+0265.941 And hold it together
+         as we fall apart
+0273.945 Maybe together
+         we can make a mark
+0278.000 in the stars
+         we embark
+0281.667 And keep us together
+         as the lights go dark
+
+0316.900 <END>
 
 ======================
 Original lyrics:  https://youtu.be/tae8F4gkfiw
 
-VERSE 1
+[Verse 1]
+Let's make a toast to the damned
+waitin' for tomorrow
+When we're played out by the band
+drowning out our sorrows
+What will become of us now
+at the end of time?
+We'll be fine, you and I
+Let's draw a line in the sand,
+keep it straight and narrow
+We had it all in our hands,
+we begged and then we borrowed
+What will become of us all
+at the end of love
+When we've stopped looking up?
 
-Let’s make a toast to the damned
-Waiting for tomorrow
-When we’re played out by the band
-Drowning out our sorrows
-What will become of us now, at the end of time?
-We’ll be fine, you and I
-
-Let’s draw a line in the sand
-Keep it straight and narrow
-We had it all in our hands
-We begged and then we borrowed
-What will become of us all at the end of love?
-When we’ve stopped looking up?
-
-CHORUS
-
+[Chorus]
 You can take my heart
-Hold it together as we fall apart
-Maybe together we can make a spark in the stars we embark
+And hold it together as we fall apart
+Maybe together we can make a mark in the stars we embark
 And keep us together as the lights go dark
 
-VERSE 2
-
-Let’s tell the truth, just for once
-Asking for an answer
-Now that it’s all said and done
-Nothing really matters
-What will become of us all if we dare to dream?
+[Verse 2]
+Let's tell the truth, just for once, asking for an answer
+Now that it's all said and done, nothing really matters
+What will become of us all if we dare to dream
 At the end of the scene?
 
-[CHORUS]
+[Chorus]
+You can take my heart
+Hold it together as we fall apart
+Maybe together we can make a mark in the stars we embark
+And keep us together as the lights go dark
 
-VERSE 3
-
-Let’s open up to the sky
-Asking it for closure
-‘Least we can say that we tried
-But it’s never really over
-What will become of us all, at the end of the line?
+[Verse 3]
+Let's open up to the sky, askin' it for closure
+'Least we can say that we tried, but it's never really over
+What will become of us all at the end of the line?
 Will we live? Will we die?
 
-[CHORUS x2]
+[Chorus]
+You can take my heart
+And hold it together as we fall apart
+Maybe together we can make a mark in the stars we embark
+And keep us together as the lights go dark
+And you can take my heart
+And hold it together as we fall apart
+Maybe together we can make a mark in the stars we embark
+And keep us together as the lights go dark

@@ -12,23 +12,22 @@
 demo_engine {
     sub play_demo() {
         ubyte line_idx
-        interrupts.vsync_counter = 0    ; not really used anymore, lyrics timings are now synced on audio block counter
-        music.blocks_counter = 0
+        uword blocks_counter = 0
+        ; interrupts.vsync_counter = 0    ; not used anymore, lyrics timings are now synced on audio block counter
         interrupts.text_scroll_enabled = true
 
         repeat {
-            uword timestamp = lyrics.timestamps[line_idx]
-            if timestamp==$ffff
-                break  ; end of lyrics sequence.
+            uword timestamp_next = lyrics.timestamps[line_idx]
+            uword timestamp_off
 
-            uword text = lyrics.lines[line_idx]
-            uword length = string.length(text)
-            uword timestamp_off = music.blocks_counter + length*6 + 30
+            if timestamp_next==$ffff
+                break  ; hard end of lyrics sequence.
 
-            while music.blocks_counter < timestamp  {
+            ; wait until it is time to show the line
+            while blocks_counter < timestamp_next  {
                 if timestamp_off {
-                    if music.blocks_counter >= timestamp_off {
-                        timestamp_off=0
+                    if blocks_counter >= timestamp_off {
+                        timestamp_off = 0
                         interrupts.text_color = 0
                         interrupts.text_fade_direction = 1
                     }
@@ -37,9 +36,14 @@ demo_engine {
                 if interrupts.aflow_semaphore==0 {
                     interrupts.aflow_semaphore++
                     music.load_next_block()
+                    blocks_counter++
                 }
             }
 
+            ; show next line of text
+            uword text = lyrics.lines[line_idx]
+            uword length = string.length(text)
+            timestamp_off = blocks_counter + length*3 + 40
             screen.clear_lyrics_text_screen()
             palette.set_color(127, screen.text_colors[len(screen.text_colors)-1])
             cx16.VERA_L1_HSCROLL_L = 0
@@ -58,7 +62,7 @@ demo_engine {
 screen {
     uword palette_ptr = memory("palette", 256*2, 0)
 
-    uword[6] text_colors = [$f00, $d02, $b13, $924, $635, $347]     ; TODO these are demo-specific...
+    uword[6] text_colors        ; these have to be set in the main demo program
     ubyte[256] reds
     ubyte[256] greens
     ubyte[256] blues

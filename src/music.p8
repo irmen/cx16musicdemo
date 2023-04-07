@@ -1,7 +1,6 @@
 music {
 
     ubyte[256] buffer
-    uword blocks_counter
 
     sub init(str musicfile) {
         cx16.VERA_AUDIO_RATE = 0                ; halt playback
@@ -12,7 +11,6 @@ music {
 
         void diskio.f_open(8, musicfile)
         void cx16diskio.f_read(buffer, 256)
-        blocks_counter = 0
     }
 
     sub start() {
@@ -28,7 +26,6 @@ music {
 
     sub load_next_block() {
         void cx16diskio.f_read(buffer, 256)
-        blocks_counter++
     }
 
     sub decode_adpcm_block() {

@@ -51,6 +51,7 @@ main {
         void cx16diskio.vload_raw("me-demoscreen.bin", 8, 0, 0)
         void diskio.load_raw(8, "me-demoscreen.pal", screen.palette_ptr)
         void cx16diskio.vload_raw("me-font.bin", 8, 1, $f000)
+        screen.text_colors = [$f00, $d02, $b13, $924, $635, $347]     ; set demo-specific text tiles fade in/out palette
         screen.init_fade_palette()
     }
 
