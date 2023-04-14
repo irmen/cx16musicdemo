@@ -1,5 +1,3 @@
-%import cx16diskio
-%import diskio
 %import palette
 %import string
 %import music

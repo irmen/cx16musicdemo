@@ -1,3 +1,6 @@
+%import textio
+%import cx16diskio
+%import diskio
 %import dslyrics
 %import demo_engine
 
