@@ -216,7 +216,7 @@ interrupts {
         } else if cx16.VERA_ISR & %00000001 {
             vsync_semaphore=0
             vsync_counter++
-            cx16.push_vera_context()
+            cx16.save_vera_context()
             when text_fade_direction {
                 1 -> {
                     palette.set_color(127, screen.text_colors[text_color])
@@ -256,7 +256,7 @@ interrupts {
                 }
             }
 
-            cx16.pop_vera_context()
+            cx16.restore_vera_context()
 
             cx16.VERA_ISR = %00000001
         }
