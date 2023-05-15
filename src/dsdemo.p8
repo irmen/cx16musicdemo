@@ -1,5 +1,4 @@
 %import textio
-%import cx16diskio
 %import diskio
 %import dslyrics
 %import demo_engine
@@ -42,8 +41,8 @@ main {
         palette.set_all_black()
         screen.clear_vram()
         screen.highres16()
-        void cx16diskio.vload_raw("ds-titlescreen.bin", 8, 0, 0)
-        void diskio.load_raw(8, "ds-titlescreen.pal", screen.palette_ptr)
+        void diskio.vload_raw("ds-titlescreen.bin", 0, 0)
+        void diskio.load_raw("ds-titlescreen.pal", screen.palette_ptr)
         screen.init_fade_palette()
     }
 
@@ -51,9 +50,9 @@ main {
         palette.set_all_black()
         screen.clear_vram()
         screen.lores256()
-        void cx16diskio.vload_raw("ds-demoscreen.bin", 8, 0, 0)
-        void diskio.load_raw(8, "ds-demoscreen.pal", screen.palette_ptr)
-        void cx16diskio.vload_raw("ds-font.bin", 8, 1, $f000)
+        void diskio.vload_raw("ds-demoscreen.bin", 0, 0)
+        void diskio.load_raw("ds-demoscreen.pal", screen.palette_ptr)
+        void diskio.vload_raw("ds-font.bin", 1, $f000)
         screen.text_colors = [$021, $142, $263, $384, $4a5, $5c6]     ; set demo-specific text tiles fade in/out palette
         screen.init_fade_palette()
     }

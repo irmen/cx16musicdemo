@@ -9,8 +9,8 @@ music {
             cx16.VERA_AUDIO_DATA = 0            ; fill buffer with short silence
         cx16.VERA_IEN |= %00001000              ; enable AFLOW irq too
 
-        void diskio.f_open(8, musicfile)
-        void cx16diskio.f_read(buffer, 256)
+        void diskio.f_open(musicfile)
+        void diskio.f_read(buffer, 256)
     }
 
     sub start() {
@@ -25,7 +25,7 @@ music {
     }
 
     sub load_next_block() {
-        void cx16diskio.f_read(buffer, 256)
+        void diskio.f_read(buffer, 256)
     }
 
     sub decode_adpcm_block() {
