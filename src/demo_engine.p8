@@ -185,9 +185,9 @@ screen {
     asmsub waitvsync() {
         %asm {{
 -           wai
-            lda  interrupts.vsync_semaphore
+            lda  p8_interrupts.p8_vsync_semaphore
             bne  -
-            inc  interrupts.vsync_semaphore
+            inc  p8_interrupts.p8_vsync_semaphore
             rts
         }}
     }
