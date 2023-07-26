@@ -197,7 +197,7 @@ screen {
 interrupts {
     const ubyte FADE_SPEED = 2
     const ubyte HSCROLL_SPEED = 3
-    const ubyte VSCROLL_SPEED = 6
+    const ubyte VSCROLL_SPEED = 5
     uword vsync_counter
     ubyte vsync_semaphore = 1
     ubyte aflow_semaphore = 1
