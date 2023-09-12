@@ -55,6 +55,8 @@ main {
         void diskio.vload_raw("me-font.bin", 1, $f000)
         screen.text_colors = [$f00, $d02, $b13, $924, $635, $347]     ; set demo-specific text tiles fade in/out palette
         screen.init_fade_palette()
+        demo_engine.lyrics_speed = 4
+        demo_engine.lyrics_base_delay = 40
     }
 
     sub show_thanks() {
@@ -74,7 +76,7 @@ main {
         txt.plot(15, 13)
         txt.print("from the Mirror's Edge Catalyst game")
         txt.plot(18, 20)
-        txt.print("(music format 16 kHz mono adpcm)")
+        txt.print("(music format: 16 bit, 20 kHz mono adpcm)")
         txt.color2(1,2)     ; white on red
         txt.plot(0, 0)
         repeat 80*3 {

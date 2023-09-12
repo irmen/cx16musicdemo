@@ -55,6 +55,8 @@ main {
         void diskio.vload_raw("ds-font.bin", 1, $f000)
         screen.text_colors = [$021, $142, $263, $384, $4a5, $5c6]     ; set demo-specific text tiles fade in/out palette
         screen.init_fade_palette()
+        demo_engine.lyrics_speed = 6
+        demo_engine.lyrics_base_delay = 20
     }
 
     sub show_thanks() {
@@ -74,7 +76,7 @@ main {
         txt.plot(15, 13)
         txt.print("from the Death Stranding game")
         txt.plot(18, 20)
-        txt.print("(music format 16 kHz mono adpcm)")
+        txt.print("(music format: 16 bit, 20 kHz mono adpcm)")
         txt.color2(1, 2)     ; light gray on black
         txt.plot(0, 0)
         repeat 80*3 {

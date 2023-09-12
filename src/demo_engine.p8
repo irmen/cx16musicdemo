@@ -8,6 +8,11 @@
 
 
 demo_engine {
+
+    ubyte lyrics_speed          ; depends on how fast the lyrics in the song are sung
+    ubyte lyrics_base_delay     ; depends on how fast the lyrics in the song are sung
+
+
     sub play_demo() {
         ubyte line_idx
         uword blocks_counter = 0
@@ -41,7 +46,7 @@ demo_engine {
             ; show next line of text
             uword text = lyrics.lines[line_idx]
             uword length = string.length(text)
-            timestamp_off = blocks_counter + length*3 + 40
+            timestamp_off = blocks_counter + length*lyrics_speed + lyrics_base_delay
             screen.clear_lyrics_text_screen()
             palette.set_color(127, screen.text_colors[len(screen.text_colors)-1])
             cx16.VERA_L1_HSCROLL_L = 0

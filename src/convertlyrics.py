@@ -90,7 +90,7 @@ def playback(triggers: list[Trigger], blocks_per_second: float) -> None:
 
 
 ADPCM_BLOCK_SIZE = 256
-SAMPLE_RATE = 16021         # make sure this matches the Sr used for the music conversion
+SAMPLE_RATE = 19836         # make sure this matches the Sr used for the music conversion
 
 
 def calculate_bps(adpcmfile) -> float:

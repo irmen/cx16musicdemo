@@ -39,12 +39,12 @@ src/dslyrics.p8: src/convertlyrics.py src/dslyrics.txt DS-MUSIC.ADPCM
 	python src/convertlyrics.py src/dslyrics.txt $@ DS-MUSIC.ADPCM
 
 ME-MUSIC.ADPCM: music/chvrches-warning-call.mp3
-	sox $< -c 1 -r 16021 music.temp.wav
+	sox $< -c 1 -r 19836 music.temp.wav
 	adpcm-xq -y -b8 -4 -r music.temp.wav $@
 	@rm music.temp.wav
 
 DS-MUSIC.ADPCM: music/chvrches-deathstranding.mp3
-	sox $< -c 1 -r 16021 music.temp.wav
+	sox $< -c 1 -r 19836 music.temp.wav
 	adpcm-xq -y -b8 -4 -r music.temp.wav $@
 	@rm music.temp.wav
 

@@ -14,7 +14,7 @@ music {
     }
 
     sub start() {
-        cx16.VERA_AUDIO_RATE = 42               ; start playback at 16021 Hz
+        cx16.VERA_AUDIO_RATE = 52               ; start playback at 19836 Hz
     }
 
     sub stop() {
