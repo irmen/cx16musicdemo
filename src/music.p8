@@ -15,6 +15,9 @@ music {
 
     sub start() {
         cx16.VERA_AUDIO_RATE = 52               ; start playback at 19836 Hz
+
+        ; NOTE: on real hardware, rate 63 (24032 Hz) also still works (and maybe even higher),
+        ;       but on the emulators anything above 20 kHz seems to be problematic when loading from sdcard image.
     }
 
     sub stop() {
