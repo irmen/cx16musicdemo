@@ -4,7 +4,7 @@ music {
 
     sub init(str musicfile) {
         cx16.VERA_AUDIO_RATE = 0                ; halt playback
-        cx16.VERA_AUDIO_CTRL = %10101111        ; mono 16 bit
+        cx16.VERA_AUDIO_CTRL = %10101100        ; mono 16 bit, volume 12
         repeat 1024
             cx16.VERA_AUDIO_DATA = 0            ; fill buffer with short silence
         cx16.VERA_IEN |= %00001000              ; enable AFLOW irq too
@@ -98,8 +98,8 @@ adpcm {
             15289, 16818, 18500, 20350, 22385, 24623, 27086, 29794,
             32767]
 
-    uword @zp predict       ; decoded 16 bit pcm sample for first channel.
-    uword @zp predict_2     ; decoded 16 bit pcm sample for second channel.
+    uword @requirezp predict       ; decoded 16 bit pcm sample for first channel.
+    uword @requirezp predict_2     ; decoded 16 bit pcm sample for second channel.
     ubyte @requirezp index
     ubyte @requirezp index_2
     uword @zp pstep
@@ -134,8 +134,17 @@ adpcm {
         pstep >>= 1
         cx16.r0s += pstep
         if nibble & %1000
-            cx16.r0s = -cx16.r0s
-        predict += cx16.r0s as uword
+            predict -= cx16.r0s
+        else
+            predict += cx16.r0s
+
+        ; NOTE: the original C/Python code uses a 32 bits prediction value and clips it to a 16 bit word
+        ;       but for speed reasons we only work with 16 bit words here all the time (with possible clipping error?)
+        ; if predicted > 32767:
+        ;    predicted = 32767
+        ; elif predicted < -32767:
+        ;    predicted = - 32767
+
         index += t_index[nibble]
         if_neg              ; was:  if index & 128
             index = 0
@@ -159,8 +168,17 @@ adpcm {
         pstep_2 >>= 1
         cx16.r0s += pstep_2
         if nibble_2 & %1000
-            cx16.r0s = -cx16.r0s
-        predict_2 += cx16.r0s as uword
+            predict_2 -= cx16.r0s
+        else
+            predict_2 += cx16.r0s
+
+        ; NOTE: the original C/Python code uses a 32 bits prediction value and clips it to a 16 bit word
+        ;       but for speed reasons we only work with 16 bit words here all the time (with possible clipping error?)
+        ; if predicted > 32767:
+        ;    predicted = 32767
+        ; elif predicted < -32767:
+        ;    predicted = - 32767
+
         index_2 += t_index[nibble_2]
         if_neg              ; was:  if index & 128
             index_2 = 0
