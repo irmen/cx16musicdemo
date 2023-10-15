@@ -70,6 +70,9 @@ adpcm {
     ; $ sox --guard source.mp3 -r 8000 -c 1 -e ima-adpcm out.wav trim 01:27.50 00:09
     ; $ ffmpeg -i source.mp3 -ss 00:01:27.50 -to 00:01:36.50  -ar 8000 -ac 1 -c:a adpcm_ima_wav -block_size 256 -map_metadata -1 -bitexact out.wav
     ; And/or use a tool such as https://github.com/dbry/adpcm-xq  (make sure to set the correct block size, -b8)
+    ;
+    ; NOTE: for speed reasons this implementation doesn't guard against clipping errors.
+    ;       if the output sounds distorted, lower the volume of the source waveform to 80% and try again etc.
 
 
     ; IMA-ADPCM file data stream format:
@@ -102,8 +105,8 @@ adpcm {
     uword @requirezp predict_2     ; decoded 16 bit pcm sample for second channel.
     ubyte @requirezp index
     ubyte @requirezp index_2
-    uword @zp pstep
-    uword @zp pstep_2
+    uword @requirezp pstep
+    uword @requirezp pstep_2
 
     sub init(uword startPredict, ubyte startIndex) {
         ; initialize first decoding channel.
@@ -120,8 +123,10 @@ adpcm {
     }
 
     sub decode_nibble(ubyte nibble) {
-        ; decoder for nibbles for the first channel.
+        ; Decoder for nibbles for the first channel.
         ; this is the hotspot of the decoder algorithm!
+        ; Note that the generated assembly from this is pretty efficient,
+        ; rewriting it by hand in asm seems to improve it only 5-10%
         cx16.r0s = 0                ; difference
         if nibble & %0100
             cx16.r0s += pstep
@@ -139,50 +144,52 @@ adpcm {
             predict += cx16.r0s
 
         ; NOTE: the original C/Python code uses a 32 bits prediction value and clips it to a 16 bit word
-        ;       but for speed reasons we only work with 16 bit words here all the time (with possible clipping error?)
+        ;       but for speed reasons we only work with 16 bit words here all the time (with possible clipping error)
         ; if predicted > 32767:
         ;    predicted = 32767
         ; elif predicted < -32767:
         ;    predicted = - 32767
 
         index += t_index[nibble]
-        if_neg              ; was:  if index & 128
+        if_neg
             index = 0
-        else if index > len(t_step)-1
+        else if index >= len(t_step)-1
             index = len(t_step)-1
         pstep = t_step[index]
     }
 
-    sub decode_nibble_second(ubyte nibble_2) {
-        ; decoder for nibbles for the second channel.
+    sub decode_nibble_second(ubyte nibble) {
+        ; Decoder for nibbles for the second channel.
         ; this is the hotspot of the decoder algorithm!
+        ; Note that the generated assembly from this is pretty efficient,
+        ; rewriting it by hand in asm seems to improve it only 5-10%
         cx16.r0s = 0                ; difference
-        if nibble_2 & %0100
+        if nibble & %0100
             cx16.r0s += pstep_2
         pstep_2 >>= 1
-        if nibble_2 & %0010
+        if nibble & %0010
             cx16.r0s += pstep_2
         pstep_2 >>= 1
-        if nibble_2 & %0001
+        if nibble & %0001
             cx16.r0s += pstep_2
         pstep_2 >>= 1
         cx16.r0s += pstep_2
-        if nibble_2 & %1000
+        if nibble & %1000
             predict_2 -= cx16.r0s
         else
             predict_2 += cx16.r0s
 
         ; NOTE: the original C/Python code uses a 32 bits prediction value and clips it to a 16 bit word
-        ;       but for speed reasons we only work with 16 bit words here all the time (with possible clipping error?)
+        ;       but for speed reasons we only work with 16 bit words here all the time (with possible clipping error)
         ; if predicted > 32767:
         ;    predicted = 32767
         ; elif predicted < -32767:
         ;    predicted = - 32767
 
-        index_2 += t_index[nibble_2]
-        if_neg              ; was:  if index & 128
+        index_2 += t_index[nibble]
+        if_neg
             index_2 = 0
-        else if index_2 > len(t_step)-1
+        else if index_2 >= len(t_step)-1
             index_2 = len(t_step)-1
         pstep_2 = t_step[index_2]
     }

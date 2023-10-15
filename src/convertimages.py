@@ -2,11 +2,13 @@ from PIL import Image
 
 
 def convert_palette(palette, num_colors):
+    def to4bit(color: int) -> int:
+        return (color * 15 + 135) >> 8      # see https://threadlocalmutex.com/?p=48
     pal = []
     for ci in range(num_colors):
-        r = palette[ci * 3] >> 4
-        g = palette[ci * 3 + 1] >> 4
-        b = palette[ci * 3 + 2] >> 4
+        r = to4bit(palette[ci * 3])
+        g = to4bit(palette[ci * 3 + 1])
+        b = to4bit(palette[ci * 3 + 2])
         pal.append((r, g, b))
     return pal
 
