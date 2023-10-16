@@ -75,9 +75,29 @@ screen {
     ubyte @zp color
 
     sub reset_video() {
-        cx16.r15L = cx16.VERA_DC_VIDEO & %00000111 ; retain chroma + output mode
-        cbm.CINT()
-        cx16.VERA_DC_VIDEO = (cx16.VERA_DC_VIDEO & %11111000) | cx16.r15L
+        ; not calling cbm.CINT() because that resets (flashes!) the palette
+        cx16.VERA_CTRL = %00000010
+        cx16.VERA_DC_VSTART = 0
+        cx16.VERA_DC_VSTOP = 480/2
+        cx16.VERA_DC_HSTART = 0
+        cx16.VERA_DC_HSTOP = 160
+        cx16.VERA_CTRL = 0
+        cx16.VERA_L0_CONFIG = 0
+        cx16.VERA_L0_MAPBASE = 0
+        cx16.VERA_L0_TILEBASE = 0
+        cx16.VERA_L1_CONFIG = $60
+        cx16.VERA_L1_MAPBASE = $d8
+        cx16.VERA_L1_TILEBASE = $f8
+        cx16.VERA_DC_HSCALE = 128
+        cx16.VERA_DC_VSCALE = 128
+        cx16.VERA_L0_HSCROLL_L = 0
+        cx16.VERA_L0_HSCROLL_H = 0
+        cx16.VERA_L0_VSCROLL_L = 0
+        cx16.VERA_L0_VSCROLL_H = 0
+        cx16.VERA_L1_HSCROLL_L = 0
+        cx16.VERA_L1_HSCROLL_H = 0
+        cx16.VERA_L1_VSCROLL_L = 0
+        cx16.VERA_L1_VSCROLL_H = 0
     }
 
     sub clear_lyrics_text_screen() {
