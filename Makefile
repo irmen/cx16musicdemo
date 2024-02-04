@@ -12,11 +12,11 @@ clean:
 
 run-me:  MEDEMO.PRG
 	# PULSE_LATENCY_MSEC=20 box16 -scale 2 -run -prg $<
-	PULSE_LATENCY_MSEC=20 x16emu -scale 2 -quality best -run -prg $<
+	PULSE_LATENCY_MSEC=20 x16emu -abufs 16 -scale 2 -quality best -run -prg $<
 
 run-ds:  DSDEMO.PRG
 	# PULSE_LATENCY_MSEC=20 box16 -scale 2 -run -prg $<
-	PULSE_LATENCY_MSEC=20 x16emu -scale 2 -quality best -run -prg $<
+	PULSE_LATENCY_MSEC=20 x16emu -abufs 16 -scale 2 -quality best -run -prg $<
 
 MEDEMO.PRG: src/medemo.p8 src/music.p8 src/demo_engine.p8 ME-TITLESCREEN.BIN ME-TITLESCREEN.PAL ME-DEMOSCREEN.BIN ME-DEMOSCREEN.PAL ME-FONT.BIN ME-MUSIC.ADPCM src/melyrics.p8
 	p8compile $< -target cx16 
