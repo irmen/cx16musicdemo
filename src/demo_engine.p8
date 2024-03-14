@@ -28,7 +28,7 @@ demo_engine {
 
             ; wait until it is time to show the line
             while blocks_counter < timestamp_next  {
-                if timestamp_off {
+                if timestamp_off!=0 {
                     if blocks_counter >= timestamp_off {
                         timestamp_off = 0
                         interrupts.text_color = 0
@@ -101,7 +101,7 @@ screen {
     }
 
     sub clear_lyrics_text_screen() {
-        cx16.vaddr(1, $b000, 0, true)
+        cx16.vaddr(1, $b000, 0, 1)
         repeat 32*32 {
             cx16.VERA_DATA0 = sc:' '
             cx16.VERA_DATA0 = 127     ; 127 is the text color RED
@@ -112,12 +112,12 @@ screen {
         sub get_vaddr() -> uword {
             return $b000 + col*2 + row*$0040
         }
-        cx16.vaddr(1, get_vaddr(), 0, true)
-        while @(text) {
+        cx16.vaddr(1, get_vaddr(), 0, 1)
+        while @(text) !=0 {
             if @(text)==sc:'|' {
                 text++
                 row+=2
-                cx16.vaddr(1, get_vaddr(), 0, true)
+                cx16.vaddr(1, get_vaddr(), 0, 1)
             }
             cx16.VERA_DATA0 = @(text)
             cx16.VERA_DATA0 = 127        ; 127 is text color RED
@@ -161,11 +161,11 @@ screen {
             waitvsync()
             for color in 0 to num_colors-1 {
                 update_palette_entry()
-                if reds[color]
+                if reds[color]!=0
                     reds[color]--
-                if greens[color]
+                if greens[color]!=0
                     greens[color]--
-                if blues[color]
+                if blues[color]!=0
                     blues[color]--
             }
         }
@@ -234,11 +234,11 @@ interrupts {
     bool text_scroll_enabled = false
 
     sub handler() {
-        if cx16.VERA_ISR & %00001000 {
+        if cx16.VERA_ISR & %00001000 !=0 {
             ; AFLOW irq occurred, refill buffer
             aflow_semaphore=0
             music.decode_adpcm_block()
-        } else if cx16.VERA_ISR & %00000001 {
+        } else if cx16.VERA_ISR & %00000001 !=0 {
             vsync_semaphore=0
             vsync_counter++
             cx16.save_vera_context()
@@ -276,7 +276,7 @@ interrupts {
                 vscroll_cnt--
                 if_neg {
                     vscroll_cnt = VSCROLL_SPEED
-                    if cx16.VERA_L1_VSCROLL_L
+                    if cx16.VERA_L1_VSCROLL_L!=0
                         cx16.VERA_L1_VSCROLL_L--
                 }
             }
