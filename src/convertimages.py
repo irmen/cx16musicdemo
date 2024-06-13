@@ -1,23 +1,11 @@
-from PIL import Image
+from cx16images import BitmapImage
 
 
-def convert_palette(palette, num_colors):
-    def to4bit(color: int) -> int:
-        return (color * 15 + 135) >> 8      # see https://threadlocalmutex.com/?p=48
-    pal = []
-    for ci in range(num_colors):
-        r = to4bit(palette[ci * 3])
-        g = to4bit(palette[ci * 3 + 1])
-        b = to4bit(palette[ci * 3 + 2])
-        pal.append((r, g, b))
-    return pal
-
-
-def extract_tile(img, letter_idx_ascii):
+def extract_tile(img: BitmapImage, letter_idx_ascii):
     y = 16 * ((letter_idx_ascii - 32) // 20)
     x = 16 * ((letter_idx_ascii - 32) % 20)
-    tile = img.crop((x, y, x + 16, y + 16))
-    tile = tile.convert('L')  # make greyscale
+    cropped = img.crop(x, y, 16, 16)
+    tile = cropped.get_image().convert('L')  # make greyscale
     # tile.save(f"tile-{letter_idx_ascii}.png")
     result = bytearray()
 
@@ -41,28 +29,14 @@ def extract_tile(img, letter_idx_ascii):
     return result
 
 
-def extract_titlescreen_lores256(img, outf):
-    outf.write(img.tobytes())
-
-
-def extract_titlescreen_hires16(img, outf):
-    for y in range(400):
-        for xpair in range(640 // 2):
-            pix1 = img.getpixel((xpair * 2, y))
-            pix2 = img.getpixel((xpair * 2 + 1, y))
-            assert 0 <= pix1 <= 15
-            assert 0 <= pix2 <= 15
-            pix = pix1 << 4 | pix2
-            outf.write(bytes([pix]))
-
-
 screencodes = "@ABCDEFGHIJKLMNOPQRSTUVWXYZ[_]__ !\"#$%&'()*+,-./0123456789:;<=>?"
 assert len(screencodes) == 64
 assert screencodes[42] == '*'
 
+
 if __name__ == "__main__":
     # the font tiles for Mirror's Edge
-    img = Image.open("images/font1.png")
+    img = BitmapImage("images/font1.png")
     with open("ME-FONT.BIN", "wb") as outf:
         tiles = {}
         for ascii in range(ord(' '), ord('Z') + 1):
@@ -76,7 +50,7 @@ if __name__ == "__main__":
                 outf.write(bytearray(32))
 
     # the font tiles for Death Stranding
-    img = Image.open("images/font3.png")
+    img = BitmapImage("images/font3.png")
     with open("DS-FONT.BIN", "wb") as outf:
         tiles = {}
         for ascii in range(ord(' '), ord('Z') + 1):
@@ -90,45 +64,25 @@ if __name__ == "__main__":
                 outf.write(bytearray(32))
 
     # the demo screen(s)
-    img = Image.open("images/demo3-lores.png")
+    img = BitmapImage("images/demo3-lores.png")
     with open("ME-DEMOSCREEN.BIN", "wb") as outf:
-        extract_titlescreen_lores256(img, outf)
+        outf.write(img.get_all_pixels_8bpp())
     with open("ME-DEMOSCREEN.PAL", "wb") as outf:
-        palette = img.getpalette()
-        for r, g, b in convert_palette(palette, len(palette) // 3):
-            # note: have to convert to different order when writing as binary file!
-            # rgb = (r << 8) | (g << 4) | b
-            # print(f"\t.word  ${rgb:04x}")
-            outf.write(bytes([g << 4 | b, r]))
-    img = Image.open("images/dsdemo-lores.png")
+        outf.write(img.get_vera_palette())
+    img = BitmapImage("images/dsdemo-lores.png")
     with open("DS-DEMOSCREEN.BIN", "wb") as outf:
-        extract_titlescreen_lores256(img, outf)
+        outf.write(img.get_all_pixels_8bpp())
     with open("DS-DEMOSCREEN.PAL", "wb") as outf:
-        palette = img.getpalette()
-        for r, g, b in convert_palette(palette, len(palette) // 3):
-            # note: have to convert to different order when writing as binary file!
-            # rgb = (r << 8) | (g << 4) | b
-            # print(f"\t.word  ${rgb:04x}")
-            outf.write(bytes([g << 4 | b, r]))
+        outf.write(img.get_vera_palette())
 
     # the title screens (hires version)
-    img = Image.open("images/title-hires.png")
+    img = BitmapImage("images/title-hires.png")
     with open("ME-TITLESCREEN.BIN", "wb") as outf:
-        extract_titlescreen_hires16(img, outf)
+        outf.write(img.get_all_pixels_4bpp())
     with open("ME-TITLESCREEN.PAL", "wb") as outf:
-        palette = img.getpalette()
-        for r, g, b in convert_palette(palette, len(palette) // 3):
-            # note: have to convert to different order when writing as binary file!
-            # rgb = (r << 8) | (g << 4) | b
-            # print(f"\t.word  ${rgb:04x}")
-            outf.write(bytes([g << 4 | b, r]))
-    img = Image.open("images/dstitle-hires.png")
+        outf.write(img.get_vera_palette())
+    img = BitmapImage("images/dstitle-hires.png")
     with open("DS-TITLESCREEN.BIN", "wb") as outf:
-        extract_titlescreen_hires16(img, outf)
+        outf.write(img.get_all_pixels_4bpp())
     with open("DS-TITLESCREEN.PAL", "wb") as outf:
-        palette = img.getpalette()
-        for r, g, b in convert_palette(palette, len(palette) // 3):
-            # note: have to convert to different order when writing as binary file!
-            # rgb = (r << 8) | (g << 4) | b
-            # print(f"\t.word  ${rgb:04x}")
-            outf.write(bytes([g << 4 | b, r]))
+        outf.write(img.get_vera_palette())
