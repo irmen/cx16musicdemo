@@ -16,7 +16,7 @@ main {
 
         ;; void diskio.fastmode(1)
         sys.set_irqd()
-        cx16.CINV = &interrupts.handler     ; cannot use cx16.set_irq() because we're dealing with AFLOW irqs as well
+        cbm.CINV = &interrupts.handler     ; cannot use cx16.set_irq() because we're dealing with AFLOW irqs as well
         sys.clear_irqd()
 
         prepare_title()
