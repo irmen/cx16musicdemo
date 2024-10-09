@@ -66,13 +66,6 @@ screen {
     uword palette_ptr = memory("palette", 256*2, 0)
 
     uword[6] text_colors        ; these have to be set in the main demo program
-    ubyte[256] reds
-    ubyte[256] greens
-    ubyte[256] blues
-    ubyte[256] reds_target
-    ubyte[256] greens_target
-    ubyte[256] blues_target
-    ubyte @zp color
 
     sub reset_video() {
         ; not calling cbm.CINT() because that resets (flashes!) the palette
@@ -126,53 +119,25 @@ screen {
     }
 
     sub init_fade_palette() {
-        for color in 0 to 255 {
-            reds[color] = 0
-            greens[color] = 0
-            blues[color] = 0
-            cx16.r0 = peekw(palette_ptr + color*$0002)
-            reds_target[color] = cx16.r0H
-            greens_target[color] = cx16.r0L >> 4
-            blues_target[color] = cx16.r0L & %1111
-        }
+        palette.set_all_black()
     }
 
-    sub fade_in(ubyte num_colors) {
-        repeat 16 {
+    sub fade_in(ubyte last_col_index) {
+        do {
             waitvsync()
             waitvsync()
             waitvsync()
-            for color in 0 to num_colors-1 {
-                update_palette_entry()
-                if reds[color]!=reds_target[color]
-                    reds[color]++
-                if greens[color]!=greens_target[color]
-                    greens[color]++
-                if blues[color]!=blues_target[color]
-                    blues[color]++
-            }
-        }
+            bool changed = palette.fade_step_colors(0, last_col_index, palette_ptr)
+        } until not changed
     }
 
-    sub fade_out(ubyte num_colors) {
-        repeat 16 {
+    sub fade_out(ubyte last_col_index) {
+        do {
             waitvsync()
             waitvsync()
             waitvsync()
-            for color in 0 to num_colors-1 {
-                update_palette_entry()
-                if reds[color]!=0
-                    reds[color]--
-                if greens[color]!=0
-                    greens[color]--
-                if blues[color]!=0
-                    blues[color]--
-            }
-        }
-    }
-
-    sub update_palette_entry() {
-        palette.set_color(color, mkword(reds[color], greens[color]<<4 | blues[color]))
+            bool changed = palette.fade_step_multi(0, last_col_index, $000)
+        } until not changed
     }
 
     sub clear_vram() {

@@ -20,16 +20,16 @@ main {
         sys.clear_irqd()
 
         prepare_title()
-        screen.fade_in(16)
+        screen.fade_in(15)
         repeat 240 screen.waitvsync()
-        screen.fade_out(16)
+        screen.fade_out(15)
 
         prepare_demo()
         music.init("me-music.adpcm")
-        screen.fade_in(0)
+        screen.fade_in(255)
         music.start()
         demo_engine.play_demo()
-        screen.fade_out(0)
+        screen.fade_out(255)
         music.stop()
 
         show_thanks()
@@ -96,7 +96,7 @@ main {
         pokew(screen.palette_ptr+2, $fff)
         pokew(screen.palette_ptr+4, $f00)
         screen.init_fade_palette()
-        screen.fade_in(3)
+        screen.fade_in(2)
     }
 
 }
