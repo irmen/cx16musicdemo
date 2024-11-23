@@ -54,7 +54,7 @@ main {
         void diskio.vload_raw("me-demoscreen.bin", 0, 0)
         void diskio.load_raw("me-demoscreen.pal", screen.palette_ptr)
         void diskio.vload_raw("me-font.bin", 1, $f000)
-        screen.text_colors = [$f00, $d02, $b13, $924, $635, $347]     ; set demo-specific text tiles fade in/out palette
+        sys.memcopy([$f00, $d02, $b13, $924, $635, $347], screen.text_colors, sizeof(screen.text_colors))  ; set demo-specific text tiles fade in/out palette
         screen.init_fade_palette()
         demo_engine.lyrics_speed = 4
         demo_engine.lyrics_base_delay = 40
