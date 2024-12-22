@@ -65,7 +65,7 @@ demo_engine {
 screen {
     uword palette_ptr = memory("palette", 256*2, 0)
 
-    uword[6] text_colors        ; these have to be set in the main demo program
+    uword[6] @nosplit text_colors        ; these have to be set in the main demo program  (nosplit because an array literal gets copied into it)
 
     sub reset_video() {
         ; not calling cbm.CINT() because that resets (flashes!) the palette
