@@ -199,6 +199,7 @@ interrupts {
     bool text_scroll_enabled = false
 
     sub handler() {
+        cx16.save_virtual_registers()
         if cx16.VERA_ISR & %00001000 !=0 {
             ; AFLOW irq occurred, refill buffer
             aflow_semaphore=0
@@ -250,6 +251,7 @@ interrupts {
 
             cx16.VERA_ISR = %00000001
         }
+        cx16.restore_virtual_registers()
 
         %asm {{
             ply
